@@ -40,7 +40,7 @@ go build -o phoenix -ldflags="-s -w" ./cmd/phoenix
 ### Using Go Install
 
 ```bash
-go install github.com/psantana5/phoenix-tools/cmd/phoenix@latest
+go install github.com/psantana5/phoenix-tools/cmd/phoenix
 ```
 
 ## Usage
