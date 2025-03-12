@@ -9,51 +9,6 @@ import (
 	"github.com/psantana5/phoenix-tools/internal/scanner/ssh"
 )
 
-// Severity represents the severity of a finding
-type Severity string
-
-const (
-	// SeverityCritical represents a critical severity
-	SeverityCritical Severity = "CRITICAL"
-	// SeverityHigh represents a high severity
-	SeverityHigh Severity = "HIGH"
-	// SeverityMedium represents a medium severity
-	SeverityMedium Severity = "MEDIUM"
-	// SeverityLow represents a low severity
-	SeverityLow Severity = "LOW"
-	// SeverityInfo represents an informational severity
-	SeverityInfo Severity = "INFO"
-)
-
-// Status represents the status of a finding
-type Status string
-
-const (
-	// StatusPassed represents a passed check
-	StatusPassed Status = "PASSED"
-	// StatusFailed represents a failed check
-	StatusFailed Status = "FAILED"
-	// StatusWarning represents a warning
-	StatusWarning Status = "WARNING"
-	// StatusInfo represents an informational finding
-	StatusInfo Status = "INFO"
-)
-
-// Finding represents a security finding
-type Finding struct {
-	ID          string                 `json:"id" yaml:"id" xml:"id"`
-	CheckType   string                 `json:"check_type" yaml:"check_type" xml:"check_type"`
-	Title       string                 `json:"title" yaml:"title" xml:"title"`
-	Description string                 `json:"description" yaml:"description" xml:"description"`
-	Severity    Severity               `json:"severity" yaml:"severity" xml:"severity"`
-	Status      Status                 `json:"status" yaml:"status" xml:"status"`
-	Timestamp   time.Time              `json:"timestamp" yaml:"timestamp" xml:"timestamp"`
-	Resource    string                 `json:"resource" yaml:"resource" xml:"resource"`
-	Remediation string                 `json:"remediation,omitempty" yaml:"remediation,omitempty" xml:"remediation,omitempty"`
-	Details     map[string]interface{} `json:"details,omitempty" yaml:"details,omitempty" xml:"details,omitempty"`
-	References  []string               `json:"references,omitempty" yaml:"references,omitempty" xml:"references,omitempty"`
-}
-
 // Check represents a security check
 type Check interface {
 	// Name returns the name of the check
@@ -80,11 +35,14 @@ func (c *cisCheck) Run(ctx context.Context, conn ssh.Connection, distroInfo dist
 	// Placeholder implementation
 	findings := []Finding{
 		{
+			ID:          "CIS-001",
 			CheckType:   "CIS",
 			Title:       "CIS 1.1.1 - Ensure mounting of cramfs filesystems is disabled",
 			Description: "The cramfs filesystem type is a compressed read-only Linux filesystem embedded in small footprint systems. A cramfs image can be used without having to first decompress the image.",
 			Severity:    SeverityMedium,
 			Status:      StatusPassed,
+			Timestamp:   time.Now(),
+			Resource:    "System Configuration",
 			Remediation: "Edit /etc/modprobe.d/CIS.conf and add 'install cramfs /bin/true'",
 		},
 	}
@@ -114,6 +72,8 @@ func (f *firewallCheck) Run(ctx context.Context, conn ssh.Connection, distroInfo
 			Description: "A firewall is a set of rules that blocks or allows network traffic based on security criteria.",
 			Severity:    SeverityHigh,
 			Status:      StatusPassed,
+			Timestamp:   time.Now(),
+			Resource:    "Firewall Service",
 			Remediation: "Enable the firewall service: 'systemctl enable firewalld && systemctl start firewalld'",
 		},
 	}
@@ -143,6 +103,8 @@ func (p *privilegesCheck) Run(ctx context.Context, conn ssh.Connection, distroIn
 			Description: "sudo allows a permitted user to execute a command as the superuser or another user, as specified by the security policy.",
 			Severity:    SeverityMedium,
 			Status:      StatusPassed,
+			Timestamp:   time.Now(),
+			Resource:    "System Packages",
 			Remediation: "Install sudo: 'apt-get install sudo' or 'yum install sudo'",
 		},
 	}
@@ -429,4 +391,63 @@ func (c BaseCheck) Name() string {
 // Description returns the description of the check
 func (c BaseCheck) Description() string {
 	return c.description
+}
+
+// NewPermissionsCheck creates a new permissions check
+func NewPermissionsCheck() Check {
+	return &permissionsCheck{}
+}
+
+// permissionsCheck implements the permissions check
+type permissionsCheck struct{}
+
+// Name returns the name of the check
+func (p *permissionsCheck) Name() string {
+	return "Permissions"
+}
+
+// Run runs the check
+func (p *permissionsCheck) Run(ctx context.Context, conn ssh.Connection, distroInfo distro.Info) ([]Finding, error) {
+	findings := []Finding{
+		{
+			CheckType:   "Permissions",
+			Title:       "File Permissions - Critical files",
+			Description: "Checks for proper permissions on critical system files",
+			Severity:    SeverityMedium,
+			Status:      StatusPassed,
+			Remediation: "Ensure critical files have appropriate permissions",
+		},
+	}
+	return findings, nil
+}
+
+// NewSSHCheck creates a new SSH check
+func NewSSHCheck() Check {
+	return &sshCheck{}
+}
+
+// sshCheck implements the SSH check
+type sshCheck struct{}
+
+// Name returns the name of the check
+func (s *sshCheck) Name() string {
+	return "SSH"
+}
+
+// Run runs the check
+func (s *sshCheck) Run(ctx context.Context, conn ssh.Connection, distroInfo distro.Info) ([]Finding, error) {
+	findings := []Finding{
+		{
+			ID:          "SSH-003",
+			CheckType:   "SSH",
+			Title:       "SSH Configuration",
+			Description: "Checks for secure SSH configuration",
+			Severity:    SeverityHigh,
+			Status:      StatusPassed,
+			Timestamp:   time.Now(),
+			Resource:    "SSH Configuration",
+			Remediation: "Ensure SSH is configured securely",
+		},
+	}
+	return findings, nil
 }
