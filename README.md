@@ -1,198 +1,48 @@
-# Phoenix - Enterprise Linux Auditing Tool
-
-Phoenix is a comprehensive, enterprise-grade tool designed to automate security and compliance auditing across multiple Linux distributions. It provides a robust framework for scanning systems against industry benchmarks, detecting vulnerabilities, and ensuring compliance with security best practices.
-
-## Features
-
-- **Multi-Distribution Support**: Works across various Linux distributions
-- **Comprehensive Checks**: Includes CIS benchmarks, firewall, privileges, vulnerability, permissions, and SSH checks
-- **Parallel Scanning**: Scan multiple systems simultaneously
-- **Flexible Output**: Generate reports in multiple formats (JSON, XML, HTML, text)
-- **Remote Scanning**: Connect to remote systems via SSH
-- **Network Range Scanning**: Scan entire CIDR ranges
-- **API Support**: Programmatic access to scanning functionality
-
-## Installation
-
-### Prerequisites
-
-- Go 1.16 or later
-- SSH client (for remote scanning)
-- Access to target Linux systems
-
-### From Source
-
-```bash
-# Clone the repository
-git clone https://github.com/psantana5/phoenix-tools.git
-cd phoenix
-
-# Build the binary
-go build -o phoenix ./cmd/phoenix
-
-# Install to your PATH (optional)
-sudo mv phoenix /usr/local/bin/
-```
-
-### Using Go Install
-
-```bash
+# Phoenix Tools Security ScannerA comprehensive security scanning tool for Linux systems that helps identify vulnerabilities, misconfigurations, and security risks.## Features- **Multiple Security Checks**: CIS benchmarks, vulnerability detection, SSH configuration analysis, firewall rules, and privilege escalation checks- **Severity Classification**: Findings categorized by CRITICAL, HIGH, MEDIUM, LOW, and INFO severity levels- **Detailed Remediation**: Clear instructions for fixing identified security issues- **API Integration**: RESTful API for integration with other security tools and pipelines- **Scan Management**: Create, list, retrieve, and delete security scans- **Filtering Capabilities**: Filter findings by severity, status, and check type- **Multi-Distribution Support**: Works with Debian, RedHat, SUSE, and Arch-based Linux distributions## Installation### Prerequisites- Go 1.16 or later- SSH client (for remote scanning)- Access to target Linux systems### From Source```bash# Clone the repositorygit clone https://github.com/psantana5/phoenix-tools.gitcd phoenix-tools# Build the binarygo build -o phoenix.exe ./cmd/phoenix# For Linux buildset GOOS=linuxset GOARCH=amd64set CGO_ENABLED=0go build -o phoenix -ldflags="-s -w" ./cmd/phoenix
+Using Go Install
+bash
+Run
 go install github.com/psantana5/phoenix-tools/cmd/phoenix@latest
-```
+Usage
+Basic Scanning
+bash
+Run
+# Scan a remote Linux systemphoenix scan target your-linux-server --checks CIS,Vulnerability,SSH,Firewall,Privileges# Scan with specific credentialsphoenix scan target your-linux-server --user admin --key /path/to/key.pem
+Report Generation
+bash
+Run
+# Generate a report from scan resultsphoenix report --format html --output-dir ./reports# Generate a report for a specific targetphoenix report --target server1.example.com
+Configuration Management
+bash
+Run
+# View current configurationphoenix config view# Set a configuration valuephoenix config set scan.parallel 5# Reset configuration to defaultsphoenix config reset
+API Server
+bash
+Run
+# Start the API serverphoenix api serve --port 8080# Access the API documentationopen http://localhost:8080/docs
+API Client
+bash
+Run
+# Check API server healthphoenix client health# List all scansphoenix client scans list# Create a new scanphoenix client scans create target-server --checks CIS,SSH,Firewall# Get findings for a specific scanphoenix client findings get scan-id-123
+Configuration
+Phoenix uses a configuration file located at %USERPROFILE%\.phoenix.yaml by default. You can specify a different configuration file using the --config flag.
 
-## Configuration
+Example configuration:
 
-Phoenix uses a configuration file located at `$HOME/.phoenix.yaml` by default. You can specify a different configuration file using the `--config` flag.
+yaml
 
-### Sample Configuration
-
-```yaml
-# Phoenix Configuration File
-scan:
-  parallel: 10  # Number of parallel scans
-  timeout: 300  # Scan timeout in seconds
-  distributions:  # Limit scan to specific distributions
-    - ubuntu
-    - centos
-    - rhel
-  ssh:
-    user: root
-    key_file: ~/.ssh/id_rsa
-    port: 22
-  checks:
-    cis: true
-    firewall: true
-    privileges: true
-    vulnerability: true
-    permissions: true
-    ssh: true
-output_format: text  # Default output format (json, xml, html, text)
-```
-
-## Usage
-
-### Basic Scanning
-
-```bash
-# Scan the local system
-phoenix scan localhost
-
-# Scan a remote system
-phoenix scan server1.example.com
-
-# Scan multiple systems
-phoenix scan server1.example.com server2.example.com
-
-# Scan a network range
-phoenix scan 192.168.1.0/24
-```
-
-### Advanced Options
-
-```bash
-# Specify checks to run
-phoenix scan --checks cis,ssh,firewall server1.example.com
-
-# Output results to a file in JSON format
-phoenix scan --output-format json --output-file results.json server1.example.com
-
-# Specify SSH credentials
-phoenix scan --ssh-user admin --ssh-key ~/.ssh/custom_key server1.example.com
-
-# Limit to specific distributions
-phoenix scan --distributions ubuntu,centos server1.example.com
-
-# Set parallel scan limit
-phoenix scan --parallel 5 192.168.1.0/24
-```
-
-### Configuration Management
-
-```bash
-# View current configuration
-phoenix config view
-
-# Set a configuration value
-phoenix config set scan.parallel 5
-
-# Reset configuration to defaults
-phoenix config reset
-```
-
-### Report Generation
-
-```bash
-# Generate a report from previous scan results
-phoenix report generate --input results.json --format html --output report.html
-
-# Compare two scan results
-phoenix report compare --baseline baseline.json --current current.json --output diff.html
-```
-
-### API Server
-
-```bash
-# Start the API server
-phoenix api serve --port 8080
-
-# Access the API documentation
-open http://localhost:8080/docs
-```
-
-## Security Checks
-
-Phoenix includes several types of security checks:
-
-- **CIS Benchmarks**: Center for Internet Security compliance checks
-- **Firewall**: Firewall configuration and rule analysis
-- **Privileges**: User and group privilege assessment
-- **Vulnerability**: Known vulnerability detection
-- **Permissions**: File and directory permission analysis
-- **SSH**: SSH configuration security assessment
-
-## Extending Phoenix
-
-You can extend Phoenix with custom checks by implementing the `Check` interface in the `checks` package:
-
-```go
-type Check interface {
-    // Name returns the name of the check
-    Name() string
-
-    // Description returns the description of the check
-    Description() string
-
-    // Run executes the check against the target
-    Run(ctx context.Context, connection ssh.Connection, distroInfo distro.Info) ([]Finding, error)
-}
-```
-
-## Architecture
-
-Phoenix is built with a modular architecture:
-
-- **CLI**: Command-line interface for user interaction
-- **Scanner**: Core scanning engine
-- **Checks**: Individual security checks
-- **SSH**: Remote system connection handling
-- **Reporting**: Result formatting and output
-- **API**: RESTful API for programmatic access
-
-## Contributing
-
+# API server configurationapi:  port: 8080  host: 0.0.0.0  auth:    enabled: true# Scanning configurationscan:  parallel: 10  timeout: 300  checks:    - CIS    - Vulnerability    - SSH    - Firewall    - Privileges# Output configurationoutput:  format: json  directory: ./reports
+Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
+Fork the repository
+Create your feature branch (git checkout -b feature/amazing-feature)
+Commit your changes (git commit -m 'Add some amazing feature')
+Push to the branch (git push origin feature/amazing-feature)
+Open a Pull Request
+License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments
-
-- Center for Internet Security (CIS) for benchmark definitions
-- The Go community for excellent libraries and tools
+Acknowledgments
+Center for Internet Security (CIS) for benchmark definitions
+The Go community for excellent libraries and tools
