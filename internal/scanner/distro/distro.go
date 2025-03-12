@@ -50,7 +50,7 @@ func Detect(ctx context.Context, conn ssh.Connection) (Info, error) {
 }
 
 // parseOSRelease parses the output of /etc/os-release
-func parseOSRelease(output string) DistroInfo {
+func parseOSRelease(output string) Info {
 	var name, version, id string
 	lines := strings.Split(output, "\n")
 
@@ -66,7 +66,7 @@ func parseOSRelease(output string) DistroInfo {
 
 	family := determineFamily(id)
 
-	return DistroInfo{
+	return Info{
 		Name:    name,
 		Version: version,
 		Family:  family,
@@ -74,7 +74,7 @@ func parseOSRelease(output string) DistroInfo {
 }
 
 // parseLSBRelease parses the output of lsb_release -a
-func parseLSBRelease(output string) DistroInfo {
+func parseLSBRelease(output string) Info {
 	var name, version string
 	lines := strings.Split(output, "\n")
 
@@ -88,7 +88,7 @@ func parseLSBRelease(output string) DistroInfo {
 
 	family := determineFamily(strings.ToLower(name))
 
-	return DistroInfo{
+	return Info{
 		Name:    name,
 		Version: version,
 		Family:  family,
@@ -96,10 +96,10 @@ func parseLSBRelease(output string) DistroInfo {
 }
 
 // parseIssue parses the output of /etc/issue
-func parseIssue(output string) DistroInfo {
+func parseIssue(output string) Info {
 	lines := strings.Split(output, "\n")
 	if len(lines) == 0 {
-		return DistroInfo{
+		return Info{
 			Name:    "Unknown",
 			Version: "Unknown",
 			Family:  "Linux",
@@ -108,14 +108,14 @@ func parseIssue(output string) DistroInfo {
 
 	parts := strings.Fields(lines[0])
 	if len(parts) < 2 {
-		return DistroInfo{
+		return Info{
 			Name:    parts[0],
 			Version: "Unknown",
 			Family:  determineFamily(strings.ToLower(parts[0])),
 		}
 	}
 
-	return DistroInfo{
+	return Info{
 		Name:    parts[0],
 		Version: parts[1],
 		Family:  determineFamily(strings.ToLower(parts[0])),
