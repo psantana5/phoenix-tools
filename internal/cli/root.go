@@ -52,6 +52,9 @@ func NewRootCommand() *cobra.Command {
 	rootCmd.AddCommand(newConfigCommand())
 	rootCmd.AddCommand(newReportCommand())
 
+	// In the newRootCommand function, add:
+	rootCmd.AddCommand(newClientCommand())
+
 	return rootCmd
 }
 

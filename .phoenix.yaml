@@ -1,0 +1,22 @@
+# API server configuration
+api:
+  port: 8080
+  host: 0.0.0.0
+  auth:
+    enabled: true
+
+# Scanning configuration
+scan:
+  parallel: 10
+  timeout: 300
+  checks:
+    - CIS
+    - Vulnerability
+    - SSH
+    - Firewall
+    - Privileges
+
+# Output configuration
+output:
+  format: json
+  directory: ./reports

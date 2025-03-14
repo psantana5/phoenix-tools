@@ -1,10 +1,17 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
+	"github.com/psantana5/phoenix-tools/internal/api"
 	"github.com/psantana5/phoenix-tools/internal/config"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -56,13 +63,13 @@ and managing configurations. It can be secured with TLS for production use.`,
 				cfg.API.Port = opts.port
 			}
 			if opts.tlsCert != "" {
-				cfg.API.TLSCert = opts.tlsCert
+				cfg.API.TLS.CertFile = opts.tlsCert
 			}
 			if opts.tlsKey != "" {
-				cfg.API.TLSKey = opts.tlsKey
+				cfg.API.TLS.KeyFile = opts.tlsKey
 			}
 			if opts.noTLS {
-				cfg.API.TLS = false
+				cfg.API.TLS.Enabled = false
 			}
 
 			// Validate configuration
@@ -79,24 +86,40 @@ and managing configurations. It can be secured with TLS for production use.`,
 
 			// Start API server
 			log.Info().Msgf("Starting Phoenix API server on %s:%d", cfg.API.Host, cfg.API.Port)
-			if cfg.API.TLS {
+			if cfg.API.TLS.Enabled {
 				log.Info().Msg("TLS enabled")
-				if cfg.API.TLSCert == "" || cfg.API.TLSKey == "" {
+				if cfg.API.TLS.CertFile == "" || cfg.API.TLS.KeyFile == "" {
 					log.Warn().Msg("Using auto-generated self-signed certificate (not recommended for production)")
 				}
 			} else {
 				log.Warn().Msg("TLS disabled (not recommended for production)")
 			}
 
-			// TODO: Implement actual API server startup
-			// This would typically involve creating a router, registering handlers,
-			// and starting an HTTP/HTTPS server
+			// Create and start the API server
+			server := api.NewServer(cfg.API)
+			go func() {
+				if err := server.Start(); err != nil && err != http.ErrServerClosed {
+					log.Error().Err(err).Msg("API server error")
+				}
+			}()
+
 			log.Info().Msg("API server started successfully")
 			log.Info().Msg("Press Ctrl+C to stop the server")
 
+			// Create a channel to wait for signals
+			stop := make(chan os.Signal, 1)
+			signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
 			// Block until interrupted
-			<-cmd.Context().Done()
+			<-stop
 			log.Info().Msg("Shutting down API server")
+
+			// Gracefully shutdown the server
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := server.Shutdown(ctx); err != nil {
+				log.Error().Err(err).Msg("Error shutting down API server")
+			}
 
 			return nil
 		},
@@ -112,9 +135,9 @@ and managing configurations. It can be secured with TLS for production use.`,
 	// Register viper flags
 	viper.BindPFlag("api.host", apiCmd.Flags().Lookup("host"))
 	viper.BindPFlag("api.port", apiCmd.Flags().Lookup("port"))
-	viper.BindPFlag("api.tls_cert", apiCmd.Flags().Lookup("tls-cert"))
-	viper.BindPFlag("api.tls_key", apiCmd.Flags().Lookup("tls-key"))
-	viper.BindPFlag("api.tls", apiCmd.Flags().Lookup("no-tls"))
+	viper.BindPFlag("api.tls.cert_file", apiCmd.Flags().Lookup("tls-cert"))
+	viper.BindPFlag("api.tls.key_file", apiCmd.Flags().Lookup("tls-key"))
+	viper.BindPFlag("api.tls.enabled", apiCmd.Flags().Lookup("no-tls"))
 
 	return apiCmd
 }

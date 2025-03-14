@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
 	"github.com/psantana5/phoenix-tools/internal/config"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -38,14 +39,14 @@ func newConfigViewCommand() *cobra.Command {
 		Long:  `Display the current Phoenix configuration settings.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Load configuration
-			cfg, err := config.LoadConfig()
+			_, err := config.LoadConfig()
 			if err != nil {
 				return fmt.Errorf("failed to load configuration: %w", err)
 			}
 
 			// Display configuration
 			fmt.Printf("Configuration file: %s\n\n", viper.ConfigFileUsed())
-			
+
 			// TODO: Implement pretty printing of configuration
 			// This would typically involve marshaling the config to YAML and printing it
 			fmt.Println("Configuration settings:")
